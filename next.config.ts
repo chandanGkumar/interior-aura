@@ -2,11 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  /* config options here */
+  // Type errors must fail the build. They were previously ignored, which hid
+  // three real null-safety bugs in cursor-effect.tsx.
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
-  reactStrictMode: false,
+  // Strict mode surfaces unsafe lifecycle and effect bugs during development.
+  reactStrictMode: true,
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
 };
 
 export default nextConfig;

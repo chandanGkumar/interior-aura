@@ -84,6 +84,24 @@
   --sidebar-border: oklch(0.27 0.04 35 / 14%);
   --sidebar-ring: oklch(0.62 0.13 50);
 
+  /* ===== Shared spacing scale =====
+     Every section used to pick its own py-16/20/28/32 ladder, which is why
+     the gaps between them never matched. One value drives all of them now. */
+  --gutter: clamp(1.25rem, 3.5vw, 3rem);
+  --section-y: clamp(3.25rem, 5.5vw, 5.5rem);
+  --header-h: 5.5rem;
+  --hero-top: calc(var(--header-h) + clamp(1.75rem, 3.5vw, 3rem));
+
+  /* ===== Shared type scale =====
+     Replaces 12 separate clamp() formulas that used 5 different vw ramps. */
+  --display-1: clamp(2.6rem, 8.4vw, 6.75rem);
+  --display-2: clamp(2.5rem, 6.6vw, 5.75rem);
+  --display-3: clamp(1.8rem, 3.4vw, 3rem);
+  --fs-body: clamp(1rem, 0.95rem + 0.28vw, 1.125rem);
+  --fs-lead: clamp(1.125rem, 1.02rem + 0.5vw, 1.375rem);
+  --fs-meta: 0.8125rem;
+  --fs-micro: 0.75rem;
+
   /* Motion easings — restrained, no overshoot */
   --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);
   --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
@@ -117,9 +135,22 @@
   html {
     scroll-behavior: smooth;
   }
+
+  /* Keep anchored sections visible below the fixed header. */
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+
+  @media (min-width: 768px) {
+    [id] {
+      scroll-margin-top: 7rem;
+    }
+  }
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans), sans-serif;
+    font-size: var(--fs-body);
+    line-height: 1.6;
     font-feature-settings: 'ss01', 'cv11';
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -141,9 +172,9 @@
 .eyebrow {
   font-family: var(--font-mono), monospace;
   text-transform: uppercase;
-  font-size: 10px;
-  line-height: 1.4;
-  letter-spacing: 0.18em;
+  font-size: var(--fs-meta);
+  line-height: 1.45;
+  letter-spacing: 0.1em;
   color: var(--muted-foreground);
 }
 
@@ -151,11 +182,47 @@
 .index-label {
   font-family: var(--font-mono), monospace;
   text-transform: uppercase;
-  font-size: 10px;
-  line-height: 1.4;
-  letter-spacing: 0.18em;
+  font-size: var(--fs-meta);
+  line-height: 1.45;
+  letter-spacing: 0.1em;
   color: var(--primary);
 }
+
+/* ============ Shared layout + type helpers ============ */
+.section-pad {
+  padding-inline: var(--gutter);
+  padding-block: var(--section-y);
+}
+
+.display-1,
+.display-2,
+.display-3 {
+  font-family: var(--font-display), sans-serif;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+.display-1 {
+  font-size: var(--display-1);
+  line-height: 0.84;
+  letter-spacing: -0.032em;
+}
+.display-2 {
+  font-size: var(--display-2);
+  line-height: 0.88;
+  letter-spacing: -0.025em;
+}
+.display-3 {
+  font-size: var(--display-3);
+  line-height: 0.95;
+  letter-spacing: -0.015em;
+}
+
+/* Plain classes, not text-[var(--x)] utilities: Tailwind reads an arbitrary
+   text-[var(...)] as a COLOR, which silently breaks the font size. */
+.fs-lead  { font-size: var(--fs-lead); }
+.fs-body  { font-size: var(--fs-body); }
+.fs-meta  { font-size: var(--fs-meta); }
+.fs-micro { font-size: var(--fs-micro); }
 
 /* ============ Reveal-on-scroll utility ============ */
 [data-reveal] {
@@ -207,6 +274,49 @@
   50%      { transform: translateY(-6px) rotate(1.2deg); }
 }
 .animate-aura-float { animation: aura-float 7s var(--ease-expo) infinite; }
+
+/* Slow drifting glow used behind the Work images */
+@keyframes aura-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(4%, -3%, 0) scale(1.08); }
+  66%      { transform: translate3d(-3%, 3%, 0) scale(0.96); }
+}
+.animate-aura-drift { animation: aura-drift 18s var(--ease-soft) infinite; }
+.animate-aura-drift-slow { animation: aura-drift 26s var(--ease-soft) infinite reverse; }
+
+/* Slow tint drift on the hero's saffron word. Stays inside the clay/saffron
+   family - only the hue moves, roughly 38 to 62, so it reads as changing
+   light on the letters rather than a colour change. */
+@keyframes aura-tint {
+  0%, 100% { color: oklch(0.62 0.13 50); }
+  25%      { color: oklch(0.60 0.14 38); }
+  50%      { color: oklch(0.65 0.12 62); }
+  75%      { color: oklch(0.61 0.135 44); }
+}
+.animate-aura-tint { animation: aura-tint 11s var(--ease-soft) infinite; }
+
+/* Hero title tilt - the block hangs from a point above it and swings like a
+   sign. Pivot is at the top so the whole title rotates as one piece, and the
+   swing passes through vertical instead of leaning to one side. Sine-style
+   easing so it slows at each extreme the way a pendulum does. */
+@keyframes aura-tilt {
+  0%, 100% { transform: rotate(-2.4deg); }
+  50%      { transform: rotate(2.4deg); }
+}
+
+/* Settle the swing on load: a wider first arc that damps into the loop. */
+@keyframes aura-tilt-drop {
+  0%   { transform: rotate(-7deg); }
+  100% { transform: rotate(-2.4deg); }
+}
+
+.animate-aura-tilt {
+  transform-origin: top center;
+  will-change: transform;
+  animation:
+    aura-tilt-drop 1.4s var(--ease-expo) both,
+    aura-tilt 6s cubic-bezier(0.37, 0, 0.63, 1) 1.4s infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

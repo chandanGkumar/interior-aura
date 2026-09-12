@@ -15,7 +15,16 @@ import { SiteHeader } from '@/components/aura/site-header';
 import { FormDialog } from '@/components/aura/form-dialog';
 import { MoodBoard } from '@/components/aura/mood-board';
 import { Reveal } from '@/components/aura/reveal';
+import Image from 'next/image';
+
 import { CursorEffect } from '@/components/aura/cursor-effect';
+import {
+  CONTACT_EMAIL,
+  CONTACT_PHONE_E164,
+  CONTACT_PHONE_DISPLAY,
+  INSTAGRAM_URL,
+  STUDIO_ADDRESS,
+} from '@/lib/contact';
 
 const SERVICES = [
   {
@@ -70,6 +79,13 @@ export default function Home() {
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.06]);
   const heroY = useTransform(scrollYProgress, [0, 1], [0, -40]);
 
+  function openService(title: string) {
+    setFormOpen(true);
+    toast(`${title} selected`, {
+      description: 'Tell us more in the form.',
+    });
+  }
+
   function scrollTo(id: string) {
     document.getElementById(id)?.scrollIntoView({
       behavior: 'smooth',
@@ -110,15 +126,8 @@ export default function Home() {
         id="top"
         className="
           relative
-          px-[max(1.25rem,3vw)]
-          pb-16
-          pt-28
-          sm:pb-20
-          sm:pt-32
-          md:pb-24
-          md:pt-36
-          lg:pb-28
-          lg:pt-40
+          px-[var(--gutter)]
+          pt-[var(--hero-top)]
         "
       >
         {/* Hero top grid */}
@@ -163,64 +172,49 @@ export default function Home() {
 
             <h1
               className="
+                animate-aura-tilt
                 mt-6
                 w-full
                 max-w-full
                 min-w-0
-                overflow-visible
-                font-display
-                text-[clamp(3.8rem,8vw,10rem)]
-                uppercase
-                leading-[0.82]
-                tracking-[-0.035em]
-                sm:text-[clamp(4.8rem,8.5vw,10rem)]
-                md:text-[clamp(5.2rem,8vw,10rem)]
-                lg:text-[clamp(5.2rem,7.4vw,10rem)]
-                xl:text-[clamp(6rem,7.2vw,10rem)]
+                display-1
               "
             >
-              <motion.span
-                className="block whitespace-nowrap"
-                initial={{
-                  opacity: 0,
-                  y: 48,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  duration: 1.1,
-                  ease: [0.19, 1, 0.22, 1],
-                }}
-              >
-                Interior
-              </motion.span>
+              {/* Each line sits in its own mask and slides up out of it. */}
 
-              <motion.span
-                className="
-                  relative
-                  z-10
-                  block
-                  whitespace-nowrap
-                  text-primary
-                "
-                initial={{
-                  opacity: 0,
-                  y: 48,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  duration: 1.1,
-                  delay: 0.15,
-                  ease: [0.19, 1, 0.22, 1],
-                }}
-              >
-                Transformation
-              </motion.span>
+              <span className="block overflow-hidden pb-[0.04em]">
+                <motion.span
+                  className="block whitespace-nowrap"
+                  initial={{ y: '115%' }}
+                  animate={{ y: '0%' }}
+                  transition={{
+                    duration: 1.15,
+                    ease: [0.19, 1, 0.22, 1],
+                  }}
+                >
+                  Interior
+                </motion.span>
+              </span>
+
+              <span className="block overflow-hidden pb-[0.04em]">
+                <motion.span
+                  className="
+                    animate-aura-tint
+                    block
+                    whitespace-nowrap
+                    text-primary
+                  "
+                  initial={{ y: '115%' }}
+                  animate={{ y: '0%' }}
+                  transition={{
+                    duration: 1.15,
+                    delay: 0.14,
+                    ease: [0.19, 1, 0.22, 1],
+                  }}
+                >
+                  Transformation
+                </motion.span>
+              </span>
             </h1>
           </div>
 
@@ -251,13 +245,10 @@ export default function Home() {
           >
             <p
               className="
-                max-w-[31ch]
-                text-base
+                max-w-[36ch]
+                fs-lead
                 leading-relaxed
                 text-foreground/85
-                sm:text-lg
-                lg:text-lg
-                xl:text-xl
               "
             >
               We turn blueprints into expressive spaces — designed for the way a
@@ -281,10 +272,10 @@ export default function Home() {
                   items-center
                   gap-1
                   font-mono
-                  text-[10px]
+                  fs-meta
                   font-semibold
                   uppercase
-                  tracking-[0.18em]
+                  tracking-[0.1em]
                   text-primary
                 "
               >
@@ -306,9 +297,6 @@ export default function Home() {
             relative
             mt-10
             overflow-hidden
-            sm:mt-12
-            md:mt-14
-            lg:mt-16
           "
           initial={{
             opacity: 0,
@@ -331,9 +319,14 @@ export default function Home() {
             }}
             className="relative"
           >
-            <img
+            <Image
               src="/aura/hero.jpg"
               alt="Contemporary living room with warm wood and saffron accents"
+              width={1920}
+              height={1080}
+              /* LCP element: load eagerly and skip lazy-loading. */
+              priority
+              sizes="100vw"
               className="
                 block
                 h-[clamp(300px,55vw,780px)]
@@ -368,13 +361,12 @@ export default function Home() {
               justify-between
               gap-4
               font-mono
-              text-[9px]
+              fs-micro
               uppercase
-              tracking-[0.18em]
+              tracking-[0.1em]
               text-primary-foreground
               sm:inset-x-5
               sm:top-5
-              sm:text-[10px]
             "
             style={{
               textShadow:
@@ -436,12 +428,12 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 animate-aura-pulse rounded-full bg-primary-foreground" />
 
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em]">
+              <span className="font-mono fs-meta uppercase tracking-[0.1em]">
                 Now creating
               </span>
             </div>
 
-            <strong className="mt-3 block text-lg leading-tight">
+            <strong className="mt-3 block text-xl leading-tight">
               Homes with
               <br />
               a point of view.
@@ -453,7 +445,7 @@ export default function Home() {
         {/* MARQUEE */}
         {/* ========================================================= */}
 
-        <div className="mt-16 overflow-hidden border-y border-border/60 py-5 sm:mt-20 md:mt-24">
+        <div className="mt-[clamp(2.5rem,4vw,3.5rem)] overflow-hidden border-y border-border/60 py-5">
           <div className="flex w-max animate-aura-marquee gap-10 whitespace-nowrap sm:gap-12">
             {[
               ...MARQUEE_WORDS,
@@ -493,13 +485,8 @@ export default function Home() {
       <section
         id="services"
         className="
-          border-t
-          border-border/60
-          px-[max(1.25rem,3vw)]
-          py-16
-          sm:py-20
-          md:py-28
-          lg:py-32
+          px-[var(--gutter)]
+          py-[var(--section-y)]
         "
       >
         <div
@@ -508,8 +495,8 @@ export default function Home() {
             grid-cols-1
             gap-10
             md:gap-14
-            lg:grid-cols-[minmax(220px,1fr)_minmax(0,2fr)]
-            lg:gap-16
+            lg:grid-cols-[minmax(20rem,1fr)_minmax(0,1.9fr)]
+            lg:gap-24
           "
         >
           <Reveal>
@@ -522,9 +509,8 @@ export default function Home() {
                 className="
                   mt-4
                   font-display
-                  text-[clamp(3.5rem,7vw,7rem)]
+                  display-2
                   uppercase
-                  leading-[0.9]
                 "
               >
                 The
@@ -535,8 +521,8 @@ export default function Home() {
               <p
                 className="
                   mt-4
-                  max-w-[18ch]
-                  text-sm
+                  max-w-[28ch]
+                  fs-body
                   leading-relaxed
                   text-muted-foreground
                 "
@@ -554,17 +540,25 @@ export default function Home() {
                 delay={i * 0.05}
               >
                 <article
-                  onClick={() => {
-                    setFormOpen(true);
-
-                    toast(`${s.title} selected`, {
-                      description: 'Tell us more in the form.',
-                    });
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Enquire about ${s.title}`}
+                  onClick={() => openService(s.title)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      openService(s.title);
+                    }
                   }}
                   className="
                     group
                     grid
                     cursor-pointer
+                    focus-visible:outline-none
+                    focus-visible:ring-2
+                    focus-visible:ring-primary
+                    focus-visible:ring-offset-2
+                    focus-visible:ring-offset-background
                     grid-cols-[28px_minmax(0,1fr)_20px]
                     items-center
                     gap-3
@@ -588,9 +582,9 @@ export default function Home() {
                   <span
                     className="
                       font-mono
-                      text-[10px]
+                      fs-meta
                       uppercase
-                      tracking-[0.18em]
+                      tracking-[0.1em]
                       text-muted-foreground
                       transition-colors
                       group-hover:text-primary
@@ -603,7 +597,7 @@ export default function Home() {
                     className="
                       min-w-0
                       font-display
-                      text-[clamp(1.7rem,4vw,3rem)]
+                      display-3
                       uppercase
                       leading-none
                     "
@@ -616,7 +610,7 @@ export default function Home() {
                       hidden
                       max-w-[42ch]
                       font-mono
-                      text-[11px]
+                      fs-meta
                       leading-relaxed
                       text-muted-foreground
                       lg:block
@@ -652,25 +646,13 @@ export default function Home() {
         id="work"
         className="
           bg-secondary
-          px-[max(1.25rem,3vw)]
-          py-16
+          px-[var(--gutter)]
+          pt-[var(--section-y)]
           text-secondary-foreground
-          sm:py-20
-          md:py-28
         "
       >
         <Reveal>
-          <div
-            className="
-              grid
-              grid-cols-1
-              items-start
-              gap-6
-              md:grid-cols-[minmax(180px,1fr)_minmax(0,2fr)]
-              md:gap-12
-              lg:gap-16
-            "
-          >
+          <div className="flex flex-col items-center gap-5 text-center">
             <span className="index-label !text-primary">
               02 / Selected spaces
             </span>
@@ -679,9 +661,8 @@ export default function Home() {
               className="
                 min-w-0
                 font-display
-                text-[clamp(4rem,9vw,10rem)]
+                display-2
                 uppercase
-                leading-[0.9]
               "
             >
               Designed to be
@@ -695,24 +676,89 @@ export default function Home() {
 
         <div
           className="
-            mt-10
+            relative
+            mx-auto
+            mt-12
             grid
+            w-full
+            max-w-6xl
             grid-cols-1
             gap-8
-            sm:mt-14
-            md:grid-cols-[minmax(0,1.15fr)_minmax(220px,0.7fr)_minmax(0,1fr)]
-            md:gap-6
+            md:grid-cols-2
           "
         >
+          {/* Animated backdrop */}
+
+          <div
+            aria-hidden
+            className="
+              pointer-events-none
+              absolute
+              -inset-x-12
+              -inset-y-16
+              -z-10
+              overflow-hidden
+            "
+          >
+            <div
+              className="
+                animate-aura-drift
+                absolute
+                left-[-6%]
+                top-[6%]
+                h-[62%]
+                w-[62%]
+                rounded-full
+                bg-primary/25
+                blur-[90px]
+              "
+            />
+
+            <div
+              className="
+                animate-aura-drift-slow
+                absolute
+                bottom-[2%]
+                right-[-6%]
+                h-[58%]
+                w-[58%]
+                rounded-full
+                bg-primary/15
+                blur-[110px]
+              "
+            />
+          </div>
+
           {/* Kitchen */}
 
           <Reveal>
             <figure className="group relative">
-              <div className="overflow-hidden bg-muted">
-                <img
+              <div
+                aria-hidden
+                className="
+                  pointer-events-none
+                  absolute
+                  inset-0
+                  translate-x-7
+                  translate-y-7
+                  border
+                  border-primary/55
+                  transition-transform
+                  duration-700
+                  ease-[cubic-bezier(0.19,1,0.22,1)]
+                  group-hover:translate-x-0
+                  group-hover:translate-y-0
+                "
+              />
+
+              <div className="relative overflow-hidden bg-muted">
+                <Image
                   src="/aura/kitchen.jpg"
                   alt="Warm walnut modular kitchen"
+                  width={1200}
+                  height={1500}
                   loading="lazy"
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="
                     block
                     aspect-[4/5]
@@ -733,9 +779,9 @@ export default function Home() {
                   flex-col
                   gap-2
                   font-mono
-                  text-[10px]
+                  fs-meta
                   uppercase
-                  tracking-[0.18em]
+                  tracking-[0.1em]
                   sm:flex-row
                   sm:items-center
                   sm:justify-between
@@ -752,28 +798,86 @@ export default function Home() {
             </figure>
           </Reveal>
 
+          {/* Bedroom */}
+
+          <Reveal delay={0.16}>
+            <figure className="group relative">
+              <div
+                aria-hidden
+                className="
+                  pointer-events-none
+                  absolute
+                  inset-0
+                  translate-x-7
+                  translate-y-7
+                  border
+                  border-primary/55
+                  transition-transform
+                  duration-700
+                  ease-[cubic-bezier(0.19,1,0.22,1)]
+                  group-hover:translate-x-0
+                  group-hover:translate-y-0
+                "
+              />
+
+              <div className="relative overflow-hidden bg-muted">
+                <Image
+                  src="/aura/bedroom.jpg"
+                  alt="Warm contemporary bedroom interior"
+                  width={1200}
+                  height={1500}
+                  loading="lazy"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="
+                    block
+                    aspect-[4/5]
+                    w-full
+                    object-cover
+                    transition-transform
+                    duration-1000
+                    ease-[cubic-bezier(0.19,1,0.22,1)]
+                    group-hover:scale-[1.04]
+                  "
+                />
+              </div>
+
+              <figcaption
+                className="
+                  mt-4
+                  flex
+                  flex-col
+                  gap-2
+                  font-mono
+                  fs-meta
+                  uppercase
+                  tracking-[0.1em]
+                  sm:flex-row
+                  sm:items-center
+                  sm:justify-between
+                "
+              >
+                <span className="text-primary">
+                  Quiet retreat
+                </span>
+
+                <span className="text-secondary-foreground/55">
+                  Bedroom / Light study
+                </span>
+              </figcaption>
+            </figure>
+          </Reveal>
+        </div>
+
+        <div className="mx-auto mt-14 w-full max-w-6xl">
           {/* Middle text */}
 
-          <Reveal delay={0.08}>
-            <div
-              className="
-                flex
-                h-full
-                flex-col
-                justify-center
-                px-0
-                py-4
-                sm:px-2
-                sm:py-6
-                md:px-4
-              "
-            >
+          <Reveal delay={0.05}>
+            <div className="flex flex-col items-center text-center">
               <p
                 className="
                   font-display
-                  text-[clamp(2rem,3.5vw,3.8rem)]
+                  display-3
                   uppercase
-                  leading-[0.98]
                 "
               >
                 Less decoration.
@@ -784,8 +888,8 @@ export default function Home() {
               <p
                 className="
                   mt-5
-                  max-w-[25ch]
-                  text-sm
+                  max-w-[44ch]
+                  fs-body
                   leading-relaxed
                   text-secondary-foreground/55
                 "
@@ -798,7 +902,7 @@ export default function Home() {
                 onClick={() => scrollTo('moodboard')}
                 className="
                   group
-                  mt-7
+                  mt-8
                   flex
                   w-fit
                   items-center
@@ -807,9 +911,9 @@ export default function Home() {
                   border-secondary-foreground/40
                   pb-1
                   font-mono
-                  text-[10px]
+                  fs-meta
                   uppercase
-                  tracking-[0.18em]
+                  tracking-[0.1em]
                   text-secondary-foreground
                   transition-colors
                   hover:border-primary
@@ -829,54 +933,6 @@ export default function Home() {
                 />
               </button>
             </div>
-          </Reveal>
-
-          {/* Bedroom */}
-
-          <Reveal delay={0.16}>
-            <figure className="group relative">
-              <div className="overflow-hidden bg-muted">
-                <img
-                  src="/aura/bedroom.jpg"
-                  alt="Warm contemporary bedroom interior"
-                  loading="lazy"
-                  className="
-                    block
-                    aspect-[4/5]
-                    w-full
-                    object-cover
-                    transition-transform
-                    duration-1000
-                    ease-[cubic-bezier(0.19,1,0.22,1)]
-                    group-hover:scale-[1.04]
-                  "
-                />
-              </div>
-
-              <figcaption
-                className="
-                  mt-4
-                  flex
-                  flex-col
-                  gap-2
-                  font-mono
-                  text-[10px]
-                  uppercase
-                  tracking-[0.18em]
-                  sm:flex-row
-                  sm:items-center
-                  sm:justify-between
-                "
-              >
-                <span className="text-primary">
-                  Quiet retreat
-                </span>
-
-                <span className="text-secondary-foreground/55">
-                  Bedroom / Light study
-                </span>
-              </figcaption>
-            </figure>
           </Reveal>
         </div>
       </section>
@@ -899,14 +955,14 @@ export default function Home() {
           grid
           grid-cols-1
           md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]
-          md:min-h-[640px]
+          md:min-h-[clamp(28rem,42vw,34rem)]
         "
       >
         <Reveal>
           <div
             className="
               grid
-              min-h-[420px]
+              min-h-[clamp(18rem,34vw,24rem)]
               place-items-center
               bg-primary
               p-10
@@ -944,7 +1000,7 @@ export default function Home() {
               p-8
               sm:p-12
               md:p-16
-              lg:p-[7vw]
+              lg:p-[clamp(2.5rem,4vw,4.5rem)]
             "
           >
             <span className="index-label">
@@ -955,9 +1011,8 @@ export default function Home() {
               className="
                 mt-4
                 font-display
-                text-[clamp(3.2rem,6vw,6.4rem)]
+                display-2
                 uppercase
-                leading-[0.9]
               "
             >
               Local insight.
@@ -969,10 +1024,9 @@ export default function Home() {
               className="
                 mt-6
                 max-w-[50ch]
-                text-base
+                fs-lead
                 leading-relaxed
                 text-muted-foreground
-                md:text-lg
               "
             >
               Interior Aura is an artist-led design practice based in Muradnagar,
@@ -999,9 +1053,9 @@ export default function Home() {
                     px-4
                     py-2
                     font-mono
-                    text-[10px]
+                    fs-meta
                     uppercase
-                    tracking-[0.18em]
+                    tracking-[0.1em]
                     text-muted-foreground
                     transition-colors
                     hover:border-primary
@@ -1024,30 +1078,19 @@ export default function Home() {
         id="contact"
         className="
           bg-foreground
-          px-[max(1.25rem,3vw)]
-          py-16
+          px-[var(--gutter)]
+          py-[var(--section-y)]
           text-background
-          sm:py-20
-          md:py-28
         "
       >
         <Reveal>
-          <div
-            className="
-              grid
-              grid-cols-1
-              items-end
-              gap-8
-              md:grid-cols-[minmax(180px,1fr)_minmax(0,2fr)]
-              md:gap-16
-            "
-          >
+          <div className="flex flex-col items-center gap-5 text-center">
             <span
               className="
                 font-mono
-                text-[10px]
+                fs-meta
                 uppercase
-                tracking-[0.18em]
+                tracking-[0.1em]
                 text-primary
               "
             >
@@ -1058,9 +1101,8 @@ export default function Home() {
               <h2
                 className="
                   font-display
-                  text-[clamp(4rem,10vw,11rem)]
+                  display-2
                   uppercase
-                  leading-[0.85]
                 "
               >
                 Let&apos;s build
@@ -1068,7 +1110,7 @@ export default function Home() {
                 your aura.
               </h2>
 
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="mt-8 flex flex-wrap justify-center gap-4">
                 <button
                   type="button"
                   onClick={() => setFormOpen(true)}
@@ -1081,9 +1123,9 @@ export default function Home() {
                     border-primary
                     pb-2
                     font-mono
-                    text-[11px]
+                    fs-meta
                     uppercase
-                    tracking-[0.18em]
+                    tracking-[0.1em]
                     text-primary
                     transition-colors
                     hover:border-background
@@ -1104,7 +1146,7 @@ export default function Home() {
                 </button>
 
                 <a
-                  href="https://www.instagram.com/interior_aura/?hl=en"
+                  href={INSTAGRAM_URL}
                   target="_blank"
                   rel="noreferrer"
                   className="
@@ -1116,9 +1158,9 @@ export default function Home() {
                     border-background/40
                     pb-2
                     font-mono
-                    text-[11px]
+                    fs-meta
                     uppercase
-                    tracking-[0.18em]
+                    tracking-[0.1em]
                     text-background/80
                     transition-colors
                     hover:border-background
@@ -1151,14 +1193,13 @@ export default function Home() {
 
         <div
           className="
-            mt-14
+            mt-[clamp(2.5rem,4vw,3.5rem)]
             grid
             grid-cols-1
             gap-8
             border-t
             border-background/15
             pt-10
-            sm:mt-16
             md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)]
           "
         >
@@ -1168,9 +1209,9 @@ export default function Home() {
             <span
               className="
                 font-mono
-                text-[10px]
+                fs-meta
                 uppercase
-                tracking-[0.18em]
+                tracking-[0.1em]
                 text-primary
               "
             >
@@ -1183,7 +1224,7 @@ export default function Home() {
                 flex
                 items-start
                 gap-2
-                text-sm
+                fs-body
                 not-italic
                 leading-relaxed
                 text-background/75
@@ -1200,9 +1241,9 @@ export default function Home() {
               />
 
               <span>
-                Shop No. 90, Muradnagar
+                {STUDIO_ADDRESS.line1}
                 <br />
-                Ghaziabad, India 201206
+                {STUDIO_ADDRESS.line2}
               </span>
             </address>
           </div>
@@ -1213,9 +1254,9 @@ export default function Home() {
             <span
               className="
                 font-mono
-                text-[10px]
+                fs-meta
                 uppercase
-                tracking-[0.18em]
+                tracking-[0.1em]
                 text-primary
               "
             >
@@ -1223,36 +1264,36 @@ export default function Home() {
             </span>
 
             <a
-              href="tel:8923033977"
+              href={`tel:${CONTACT_PHONE_E164}`}
               className="
                 mt-3
                 flex
                 items-center
                 gap-2
-                text-sm
+                fs-body
                 text-background/75
                 transition-colors
                 hover:text-background
               "
             >
-              Call 89230 33977
+              Call {CONTACT_PHONE_DISPLAY}
             </a>
 
             <a
-              href="mailto:soumaysinghal11@gmail.com"
+              href={`mailto:${CONTACT_EMAIL}`}
               className="
                 mt-2
                 flex
                 items-center
                 gap-2
                 break-all
-                text-sm
+                fs-body
                 text-background/75
                 transition-colors
                 hover:text-background
               "
             >
-              soumaysinghal11@gmail.com
+              {CONTACT_EMAIL}
             </a>
           </div>
 
@@ -1267,7 +1308,7 @@ export default function Home() {
             <p
               className="
                 font-display
-                text-[clamp(2rem,4vw,4.5rem)]
+                display-3
                 uppercase
                 leading-none
                 text-background/25
@@ -1293,9 +1334,9 @@ export default function Home() {
             border-background/10
             pt-6
             font-mono
-            text-[10px]
+            fs-meta
             uppercase
-            tracking-[0.18em]
+            tracking-[0.1em]
             text-background/40
             md:flex-row
           "
@@ -1305,7 +1346,7 @@ export default function Home() {
           </span>
 
           <a
-            href="https://www.instagram.com/interior_aura/?hl=en"
+            href={INSTAGRAM_URL}
             target="_blank"
             rel="noreferrer"
             className="transition-colors hover:text-background"

@@ -5,20 +5,85 @@ import path from 'path';
 
 export const runtime = 'nodejs';
 
-const TO_EMAIL = 'soumaysinghal11@gmail.com';
+/** Recipient comes from env so it is never hardcoded in source again. */
+const TO_EMAIL =
+  process.env.CONTACT_TO_EMAIL?.trim() ||
+  process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() ||
+  'soumaysinghal11@gmail.com';
+
+/** Field caps - unbounded input is an email-bomb and disk-fill vector. */
+const LIMITS = {
+  name: 120,
+  email: 200,
+  projectType: 80,
+  budget: 80,
+  message: 4000,
+} as const;
+
+/**
+ * Per-IP sliding-window rate limit. In-memory, so it resets on redeploy and is
+ * per-instance - fine for a single-server studio site. Move to Redis/Upstash
+ * if this ever runs behind more than one instance.
+ */
+const RATE_LIMIT = { max: 3, windowMs: 10 * 60 * 1000 };
+const hits = new Map<string, number[]>();
+
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_LIMIT.windowMs);
+  if (recent.length >= RATE_LIMIT.max) {
+    hits.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  hits.set(ip, recent);
+  if (hits.size > 5000) {
+    for (const [key, times] of hits) {
+      if (times.every((t) => now - t >= RATE_LIMIT.windowMs)) hits.delete(key);
+    }
+  }
+  return false;
+}
+
+function clientIp(req: NextRequest): string {
+  const fwd = req.headers.get('x-forwarded-for');
+  if (fwd) return (fwd.split(',')[0] ?? 'unknown').trim();
+  return req.headers.get('x-real-ip')?.trim() || 'unknown';
+}
+
+/** Strip CR/LF so user input can never inject extra mail headers. */
+function singleLine(value: string, max: number): string {
+  return value.replace(/[\r\n]+/g, ' ').trim().slice(0, max);
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = clientIp(req);
+    if (rateLimited(ip)) {
+      return NextResponse.json(
+        { ok: false, error: 'Too many enquiries from this device. Please try again in a little while.' },
+        { status: 429, headers: { 'Retry-After': String(RATE_LIMIT.windowMs / 1000) } },
+      );
+    }
+
     const body = await req.json().catch(() => null);
-    if (!body) {
+    if (!body || typeof body !== 'object') {
       return NextResponse.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    const name = String(body.name ?? '').trim();
-    const email = String(body.email ?? '').trim();
-    const projectType = String(body.projectType ?? '').trim();
-    const budget = String(body.budget ?? '').trim();
-    const message = String(body.message ?? '').trim();
+    const raw = body as Record<string, unknown>;
+
+    // Honeypot: a field hidden from humans. Anything that fills it is a bot.
+    // Return 200 so the bot believes it succeeded and does not retry.
+    if (String(raw.company ?? '').trim() !== '') {
+      return NextResponse.json({ ok: true, channel: 'discarded' });
+    }
+
+    const name = singleLine(String(raw.name ?? ''), LIMITS.name);
+    const email = singleLine(String(raw.email ?? ''), LIMITS.email);
+    const projectType = singleLine(String(raw.projectType ?? ''), LIMITS.projectType);
+    const budget = singleLine(String(raw.budget ?? ''), LIMITS.budget);
+    const message = String(raw.message ?? '').trim().slice(0, LIMITS.message);
 
     if (!name || !email || !message) {
       return NextResponse.json(
@@ -95,21 +160,34 @@ export async function POST(req: NextRequest) {
     }
 
     // === Fallback: persist submission locally so nothing is lost =========
-    const submissionsDir = path.join(process.cwd(), '.contact-submissions');
-    await fs.mkdir(submissionsDir, { recursive: true });
-    const file = path.join(submissionsDir, `${Date.now()}-${slugify(name)}.json`);
-    await fs.writeFile(
-      file,
-      JSON.stringify({ name, email, projectType, budget, message, at: new Date().toISOString() }, null, 2),
-      'utf-8',
+    // Persist so the enquiry is not lost, but report the channel honestly so
+    // the UI can tell the visitor their message was NOT emailed.
+    // Under output:'standalone' the server may run with cwd inside .next.
+    const submissionsDir =
+      process.env.CONTACT_STORE_DIR?.trim() ||
+      path.join(process.cwd(), '.contact-submissions');
+    let stored = false;
+    try {
+      await fs.mkdir(submissionsDir, { recursive: true });
+      await fs.writeFile(
+        path.join(submissionsDir, `${Date.now()}-${slugify(name)}.json`),
+        JSON.stringify({ name, email, projectType, budget, message, at: new Date().toISOString() }, null, 2),
+        'utf-8',
+      );
+      stored = true;
+    } catch (writeErr) {
+      // Read-only filesystems are normal on containerised hosts.
+      console.error('[contact] SMTP unset and could not persist submission:', writeErr);
+    }
+
+    // Log that it happened, never the contents - the message body is customer PII.
+    console.warn(
+      `[contact] SMTP is not configured. Enquiry ${stored ? 'saved to disk' : 'NOT saved'}. ` +
+        'Set SMTP_HOST / SMTP_USER / SMTP_PASS to deliver enquiries by email.',
     );
 
-    console.log('[contact] SMTP not configured — saved submission to', file);
-    console.log('[contact] Would send to:', TO_EMAIL);
-    console.log('[contact] Subject:', subject);
-    console.log('[contact] Body:\n', text);
-
-    return NextResponse.json({ ok: true, channel: 'local-file', saved: file });
+    // No absolute server paths in the response - that leaks the filesystem layout.
+    return NextResponse.json({ ok: true, channel: 'local-file', stored });
   } catch (err) {
     console.error('[contact] error:', err);
     return NextResponse.json(

@@ -60,7 +60,9 @@ export function CursorEffect() {
     window.addEventListener('pointerover', onOver, { passive: true });
     window.addEventListener('pointerout', onOut, { passive: true });
 
-    function loop() {
+    // Arrow function, not a hoisted declaration: TypeScript keeps the
+    // non-null narrowing from the guard above across an arrow closure.
+    const loop = () => {
       rx += (px - rx) * EASE;
       ry += (py - ry) * EASE;
       gx += (px - gx) * EASE * 0.5;
@@ -71,7 +73,7 @@ export function CursorEffect() {
       glow.style.transform = `translate3d(${gx}px, ${gy}px, 0) translate(-50%, -50%)`;
 
       rafId = requestAnimationFrame(loop);
-    }
+    };
     rafId = requestAnimationFrame(loop);
 
     return () => {

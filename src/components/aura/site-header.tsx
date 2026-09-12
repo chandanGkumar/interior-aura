@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { Menu, X, ArrowUpRight, Phone, FormInput } from 'lucide-react';
+
+import { CONTACT_PHONE_E164, CONTACT_PHONE_DISPLAY, INSTAGRAM_URL } from '@/lib/contact';
 
 interface SiteHeaderProps {
   onOpenForm: () => void;
@@ -12,10 +15,11 @@ const NAV = [
   { id: 'work', label: 'Work' },
   { id: 'services', label: 'Services' },
   { id: 'studio', label: 'Studio' },
-  { id: 'moodboard', label: 'Our designs', gated: true },
+  // gated:false - the designs section is open to everyone, so no lock dot.
+  { id: 'moodboard', label: 'Our designs', gated: false },
 ];
 
-const CONTACT_PHONE = '8923033977';
+// Contact details live in one place - see src/lib/contact.ts
 
 export function SiteHeader({ onOpenForm }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
@@ -45,22 +49,27 @@ export function SiteHeader({ onOpenForm }: SiteHeaderProps) {
       }`}
     >
       <div
-        className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 py-3 md:py-4"
-        style={{ paddingInline: 'max(1.5rem, 3vw)' }}
+        className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 py-4 md:py-5"
+        style={{ paddingInline: 'var(--gutter)' }}
       >
         {/* Brand — real logo + visible wordmark (prominent) */}
         <a
           href="#top"
           onClick={(e) => navClick(e, 'top')}
-          className="group flex items-center gap-3.5"
+          className="group flex items-center gap-3"
           aria-label="Interior Aura home"
         >
-          <span className="relative grid h-14 w-14 place-items-center overflow-hidden rounded-full ring-2 ring-primary/40 transition-all duration-500 group-hover:ring-primary group-hover:scale-105 md:h-16 md:w-16">
-            <img
-              src="/aura/brand-logo.jpg"
+          <span className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-full ring-2 ring-primary/40 transition-all duration-500 group-hover:ring-primary group-hover:scale-105 md:h-13 md:w-13">
+            {/* Transparent PNG: the old JPG had a white box behind it and
+                relied on mixBlendMode:multiply, which breaks on any
+                non-white background. */}
+            <Image
+              src="/aura/brand-mark.png"
               alt="Interior Aura emblem"
-              className="h-full w-full object-cover"
-              style={{ mixBlendMode: 'multiply' }}
+              width={128}
+              height={128}
+              priority
+              className="h-[82%] w-[82%] object-contain"
             />
             {/* soft saffron halo */}
             <span
@@ -74,10 +83,10 @@ export function SiteHeader({ onOpenForm }: SiteHeaderProps) {
             </span>
           </span>
           <span className="flex flex-col leading-none">
-            <span className="font-display text-lg uppercase leading-none tracking-tight text-foreground md:text-xl">
+            <span className="font-display text-xl uppercase leading-none tracking-tight text-foreground md:text-2xl">
               Interior Aura
             </span>
-            <span className="mt-1.5 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+            <span className="mt-1.5 flex items-center gap-1.5 font-mono fs-micro uppercase tracking-[0.1em] text-muted-foreground">
               <span className="h-1 w-1 rounded-full bg-primary" />
               Ghaziabad · Est. 2026
             </span>
@@ -85,13 +94,13 @@ export function SiteHeader({ onOpenForm }: SiteHeaderProps) {
         </a>
 
         {/* Nav */}
-        <nav className="hidden items-center gap-8 md:flex" aria-label="Main navigation">
+        <nav className="hidden items-center gap-9 md:flex" aria-label="Main navigation">
           {NAV.map((item) => (
             <a
               key={item.id}
               href={`#${item.id}`}
               onClick={(e) => navClick(e, item.id)}
-              className="group relative font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/75 transition-colors hover:text-foreground"
+              className="group relative font-mono fs-meta uppercase tracking-[0.12em] text-foreground/75 transition-colors hover:text-foreground"
             >
               {item.label}
               {item.gated && (
@@ -105,10 +114,10 @@ export function SiteHeader({ onOpenForm }: SiteHeaderProps) {
         {/* Actions — Instagram + Form + Contact (no more Sign-in) */}
         <div className="flex items-center justify-end gap-2 md:gap-3">
           <a
-            href="https://www.instagram.com/interior_aura/?hl=en"
+            href={INSTAGRAM_URL}
             target="_blank"
             rel="noreferrer"
-            className="hidden items-center gap-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-primary sm:inline-flex"
+            className="hidden items-center gap-1 font-mono fs-meta uppercase tracking-[0.1em] text-muted-foreground transition-colors hover:text-primary sm:inline-flex"
           >
             Instagram
             <ArrowUpRight className="h-3 w-3" />
@@ -116,16 +125,16 @@ export function SiteHeader({ onOpenForm }: SiteHeaderProps) {
           <button
             type="button"
             onClick={onOpenForm}
-            className="group flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground transition-all duration-300 ease-[cubic-bezier(0.19,1,0.22,1)] hover:border-primary hover:text-primary"
+            className="group flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-4 py-2 font-mono fs-meta font-semibold uppercase tracking-[0.1em] text-foreground transition-all duration-300 ease-[cubic-bezier(0.19,1,0.22,1)] hover:border-primary hover:text-primary"
           >
             <FormInput className="h-3 w-3 transition-transform duration-300 group-hover:-translate-x-0.5" />
             <span className="hidden sm:inline">Form</span>
             <span className="sm:hidden">Form</span>
           </button>
           <a
-            href={`tel:${CONTACT_PHONE}`}
-            className="group flex items-center gap-2 rounded-full bg-foreground px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-background transition-all duration-300 ease-[cubic-bezier(0.19,1,0.22,1)] hover:bg-primary hover:text-primary-foreground"
-            aria-label={`Call ${CONTACT_PHONE}`}
+            href={`tel:${CONTACT_PHONE_E164}`}
+            className="group flex items-center gap-2 rounded-full bg-foreground px-4 py-2 font-mono fs-meta font-semibold uppercase tracking-[0.1em] text-background transition-all duration-300 ease-[cubic-bezier(0.19,1,0.22,1)] hover:bg-primary hover:text-primary-foreground"
+            aria-label={`Call ${CONTACT_PHONE_DISPLAY}`}
           >
             <Phone className="h-3 w-3 transition-transform duration-300 group-hover:scale-110" />
             <span className="hidden sm:inline">Contact</span>
@@ -165,10 +174,10 @@ export function SiteHeader({ onOpenForm }: SiteHeaderProps) {
               ))}
               <div className="mt-4 flex flex-col gap-3">
                 <a
-                  href="https://www.instagram.com/interior_aura/?hl=en"
+                  href={INSTAGRAM_URL}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-between rounded-full border border-border/60 px-5 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
+                  className="flex items-center justify-between rounded-full border border-border/60 px-5 py-3 font-mono fs-meta uppercase tracking-[0.1em] text-muted-foreground"
                 >
                   Instagram <ArrowUpRight className="h-3.5 w-3.5" />
                 </a>
@@ -178,13 +187,13 @@ export function SiteHeader({ onOpenForm }: SiteHeaderProps) {
                     setMobileOpen(false);
                     onOpenForm();
                   }}
-                  className="flex items-center justify-between rounded-full border border-border/60 px-5 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground"
+                  className="flex items-center justify-between rounded-full border border-border/60 px-5 py-3 font-mono fs-meta uppercase tracking-[0.1em] text-foreground"
                 >
                   Form <FormInput className="h-3.5 w-3.5" />
                 </button>
                 <a
-                  href={`tel:${CONTACT_PHONE}`}
-                  className="flex items-center justify-between rounded-full bg-foreground px-5 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-background"
+                  href={`tel:${CONTACT_PHONE_E164}`}
+                  className="flex items-center justify-between rounded-full bg-foreground px-5 py-3 font-mono fs-meta uppercase tracking-[0.1em] text-background"
                 >
                   Contact <Phone className="h-3.5 w-3.5" />
                 </a>

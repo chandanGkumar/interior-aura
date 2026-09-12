@@ -6,7 +6,7 @@ A refined, professional editorial studio portfolio for an interior design practi
 
 - **Prominent brand lockup** (top-left): a 56–64px circular brand-logo badge with a 2px saffron ring, soft saffron halo behind it, and a pulsing live-indicator dot. Paired with the "Interior Aura" wordmark and "Ghaziabad · Est. 2026" caption (with a saffron bullet separator).
 - **Cursor effect** — a three-layer cursor follower (dot / ring / glow) wired across the whole site. The dot pins to the pointer, the ring trails with eased lag, the glow lags further still. Hover over interactive elements widens the ring; press tightens it. Touch devices and reduced-motion users get nothing.
-- **Form button** (replaces the old Sign-in button) — opens a dialog with name, email, project type, budget band, and message. Submissions are sent to **interior_aura@gmail.com** via a Next.js API route (`src/app/api/contact/route.ts`) using Nodemailer. Without SMTP credentials, submissions are saved to `.contact-submissions/` so nothing is lost.
+- **Form button** (replaces the old Sign-in button) — opens a dialog with name, email, project type, budget band, and message. Submissions are sent to **soumaysinghal11@gmail.com** via a Next.js API route (`src/app/api/contact/route.ts`) using Nodemailer. Without SMTP credentials, submissions are saved to `.contact-submissions/` so nothing is lost.
 - **Contact button** — a `tel:1234123456` link in the header and footer that dials the studio on any device with a phone dialer.
 - **Instagram link** (renamed from "Get a quote") — points to https://www.instagram.com/interior_aura/.
 - **"Our designs" section** (renamed from "Members") — 4 premium mood tiles + a curated material library + save summary. Saves persist to `localStorage` (no account needed). The orange "Now creating" card in the hero is positioned fully inside the hero section with proper clearance — no more clipping by the next section.
@@ -77,14 +77,14 @@ bun run db:push
 
 ### 3. Configure email delivery (optional)
 
-The contact form works out of the box — without SMTP credentials, submissions are saved to `.contact-submissions/`. To deliver real emails to `interior_aura@gmail.com`, edit `.env` and uncomment the SMTP block:
+The contact form works out of the box — without SMTP credentials, submissions are saved to `.contact-submissions/`. To deliver real emails to `soumaysinghal11@gmail.com`, edit `.env` and uncomment the SMTP block:
 
 ```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
-SMTP_USER=interior_aura@gmail.com
+SMTP_USER=soumaysinghal11@gmail.com
 SMTP_PASS=your-gmail-app-password    # get one at myaccount.google.com/apppasswords
-SMTP_FROM=interior_aura@gmail.com
+SMTP_FROM=soumaysinghal11@gmail.com
 ```
 
 ### 4. Run the dev server
@@ -124,7 +124,7 @@ Hover state widens the ring to 66px and shrinks the dot to 0px. Press state tigh
    { "name": "...", "email": "...", "projectType": "...", "budget": "...", "message": "..." }
    ```
 4. The API route (`src/app/api/contact/route.ts`) validates the fields, builds a styled HTML email + plain-text version, and:
-   - **If SMTP env vars are set** → sends the email via Nodemailer to `interior_aura@gmail.com` with the submitter's email set as `replyTo`.
+   - **If SMTP env vars are set** → sends the email via Nodemailer to `soumaysinghal11@gmail.com` with the submitter's email set as `replyTo`.
    - **If SMTP env vars are NOT set** → saves the submission to `.contact-submissions/<timestamp>-<slug>.json` and logs the email body to the server console.
 5. The dialog shows a success state ("Thank you, {firstName}.") with a `CheckCircle2` badge and a toast notification fires ("Enquiry sent").
 

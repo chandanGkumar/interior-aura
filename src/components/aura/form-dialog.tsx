@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { CONTACT_EMAIL, INSTAGRAM_URL } from '@/lib/contact';
 
 interface FormDialogProps {
   open: boolean;
@@ -42,11 +43,15 @@ export function FormDialog({ open, onOpenChange }: FormDialogProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  /** Honeypot. Hidden from people; bots fill it in and get discarded. */
+  const [company, setCompany] = useState('');
+  /** What the server actually did: 'smtp' = emailed, 'local-file' = not emailed. */
+  const [channel, setChannel] = useState<string | null>(null);
 
   function reset() {
     setName(''); setEmail(''); setProjectType(PROJECT_TYPES[0]);
-    setBudget(''); setMessage('');
-    setError(null); setDone(false);
+    setBudget(''); setMessage(''); setCompany('');
+    setError(null); setDone(false); setChannel(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -63,16 +68,24 @@ export function FormDialog({ open, onOpenChange }: FormDialogProps) {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, projectType, budget, message }),
+        body: JSON.stringify({ name, email, projectType, budget, message, company }),
       });
       const data = await res.json().catch(() => ({ ok: false }));
       if (!res.ok || !data.ok) {
         throw new Error(data.error || 'Could not send your message.');
       }
       setDone(true);
-      toast.success('Enquiry sent', {
-        description: 'The studio will be in touch within 1–2 working days.',
-      });
+      setChannel(typeof data.channel === 'string' ? data.channel : null);
+      // Only claim delivery when the server actually sent an email.
+      if (data.channel === 'smtp') {
+        toast.success('Enquiry sent', {
+          description: 'The studio will be in touch within 1-2 working days.',
+        });
+      } else {
+        toast.warning('Enquiry recorded', {
+          description: 'Email delivery is not configured yet - please also reach us on Instagram.',
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {
@@ -98,10 +111,10 @@ export function FormDialog({ open, onOpenChange }: FormDialogProps) {
             style={{ background: 'radial-gradient(closest-side, var(--primary), transparent)' }}
           />
           <DialogHeader className="relative space-y-2 px-6 pt-7">
-            <DialogTitle className="font-display text-3xl uppercase leading-none tracking-tight">
+            <DialogTitle className="font-display text-4xl uppercase leading-none tracking-tight">
               Start a <span className="text-primary">project</span>
             </DialogTitle>
-            <DialogDescription className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            <DialogDescription className="font-mono fs-meta uppercase tracking-[0.1em] text-muted-foreground">
               Tell us about your space — we reply within 1–2 working days
             </DialogDescription>
           </DialogHeader>
@@ -123,12 +136,31 @@ export function FormDialog({ open, onOpenChange }: FormDialogProps) {
                 >
                   <CheckCircle2 className="h-7 w-7" />
                 </motion.div>
-                <h3 className="mt-5 font-display text-2xl uppercase leading-none">
+                <h3 className="mt-5 font-display text-3xl uppercase leading-none">
                   Thank you{name ? `, ${name.split(' ')[0]}` : ''}.
                 </h3>
-                <p className="mx-auto mt-3 max-w-[40ch] text-sm leading-relaxed text-muted-foreground">
-                  Your enquiry is on its way to <span className="text-foreground">soumaysinghal11@gmail.com</span>.
-                  The studio will reach out to you shortly at the email you provided.
+                <p className="mx-auto mt-3 max-w-[40ch] fs-body leading-relaxed text-muted-foreground">
+                  {channel === 'smtp' ? (
+                    <>
+                      Your enquiry is on its way to{' '}
+                      <span className="text-foreground">{CONTACT_EMAIL}</span>. The studio will
+                      reach out shortly at the email you provided.
+                    </>
+                  ) : (
+                    <>
+                      We have recorded your enquiry, but email delivery is not switched on yet, so
+                      it has not reached the studio inbox. Please also message us on{' '}
+                      <a
+                        href={INSTAGRAM_URL}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary underline underline-offset-2"
+                      >
+                        Instagram
+                      </a>{' '}
+                      so nothing is missed.
+                    </>
+                  )}
                 </p>
                 <div className="mt-6 flex justify-center">
                   <Button
@@ -149,13 +181,33 @@ export function FormDialog({ open, onOpenChange }: FormDialogProps) {
                 onSubmit={handleSubmit}
                 className="space-y-4 px-6 pt-5"
               >
+                {/* Honeypot. Hidden from people and from screen readers; bots
+                    fill it and the server silently discards the submission.
+                    Must not use display:none - some bots skip those. */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-[-9999px] h-0 w-0 overflow-hidden opacity-0"
+                >
+                  <label htmlFor="form-company">Company (leave this blank)</label>
+                  <input
+                    id="form-company"
+                    name="company"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                  />
+                </div>
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="form-name" className="font-mono text-[10px] uppercase tracking-[0.18em]">
+                    <Label htmlFor="form-name" className="font-mono fs-meta uppercase tracking-[0.1em]">
                       Full name
                     </Label>
                     <Input
                       id="form-name"
+                      maxLength={120}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. Soumay Singhal"
@@ -165,7 +217,7 @@ export function FormDialog({ open, onOpenChange }: FormDialogProps) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="form-email" className="font-mono text-[10px] uppercase tracking-[0.18em]">
+                    <Label htmlFor="form-email" className="font-mono fs-meta uppercase tracking-[0.1em]">
                       Email address
                     </Label>
                     <Input
@@ -183,14 +235,14 @@ export function FormDialog({ open, onOpenChange }: FormDialogProps) {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="form-type" className="font-mono text-[10px] uppercase tracking-[0.18em]">
+                    <Label htmlFor="form-type" className="font-mono fs-meta uppercase tracking-[0.1em]">
                       Project type
                     </Label>
                     <select
                       id="form-type"
                       value={projectType}
                       onChange={(e) => setProjectType(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 fs-body text-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       {PROJECT_TYPES.map((t) => (
                         <option key={t} value={t}>{t}</option>
@@ -198,7 +250,7 @@ export function FormDialog({ open, onOpenChange }: FormDialogProps) {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="form-budget" className="font-mono text-[10px] uppercase tracking-[0.18em]">
+                    <Label htmlFor="form-budget" className="font-mono fs-meta uppercase tracking-[0.1em]">
                       Budget
                     </Label>
                     <Input
@@ -212,7 +264,7 @@ export function FormDialog({ open, onOpenChange }: FormDialogProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="form-message" className="font-mono text-[10px] uppercase tracking-[0.18em]">
+                  <Label htmlFor="form-message" className="font-mono fs-meta uppercase tracking-[0.1em]">
                     Your requirement / message
                   </Label>
                   <Textarea
@@ -230,7 +282,7 @@ export function FormDialog({ open, onOpenChange }: FormDialogProps) {
                   <motion.p
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                    className="rounded-md bg-destructive/10 px-3 py-2 fs-body text-destructive"
                   >
                     {error}
                   </motion.p>
@@ -257,8 +309,8 @@ export function FormDialog({ open, onOpenChange }: FormDialogProps) {
                   </Button>
                 </DialogFooter>
 
-                <p className="pb-6 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Delivered to <span className="text-primary">soumaysinghal11@gmail.com</span>
+                <p className="pb-6 text-center font-mono fs-meta uppercase tracking-[0.1em] text-muted-foreground">
+                  Delivered to <span className="text-primary">{CONTACT_EMAIL}</span>
                 </p>
               </motion.form>
             )}
