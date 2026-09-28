@@ -88,7 +88,7 @@ export function SiteHeader({ onOpenForm }: SiteHeaderProps) {
             </span>
             <span className="mt-1.5 flex items-center gap-1.5 font-mono fs-micro uppercase tracking-[0.1em] text-muted-foreground">
               <span className="h-1 w-1 rounded-full bg-primary" />
-              Ghaziabad · Est. 2026
+              Ghaziabad · Est. 2020
             </span>
           </span>
         </a>

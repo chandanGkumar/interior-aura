@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ArrowRight, Bookmark, X } from 'lucide-react';
-import Image from 'next/image';
 import { Reveal } from './reveal';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -97,25 +96,6 @@ export function MoodBoard({ onOpenForm }: MoodBoardProps) {
     setReady(true);
   }, []);
 
-  // Lightbox: close on Escape and stop the page scrolling behind it.
-  useEffect(() => {
-    if (!active) return;
-
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setActive(null);
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    window.addEventListener('keydown', onKey);
-
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [active]);
-
   function persist(next: SavedState) {
     setSaved(next);
     try {
@@ -143,42 +123,33 @@ export function MoodBoard({ onOpenForm }: MoodBoardProps) {
 
   return (
     <section id="moodboard" className="bg-secondary text-secondary-foreground">
-      <div className="section-pad">
+      <div className="px-[max(1.5rem,3vw)] py-20 md:py-28">
         <Reveal>
-          <div className="flex flex-col items-start gap-5">
-            <span className="font-mono fs-meta uppercase tracking-[0.1em] text-primary">
-              04 / Our designs
-            </span>
-
-            <h2 className="display-2">
-              Our <em className="not-italic text-primary">Designs</em>
-            </h2>
-
-            <div className="grid w-full grid-cols-1 gap-x-14 gap-y-5 md:grid-cols-2">
-              <p className="fs-lead text-secondary-foreground/70">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_1.5fr] md:gap-12">
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary">
+                04 / Our designs
+              </span>
+              <h2 className="mt-5 font-display text-5xl uppercase leading-[0.9] tracking-tight md:text-7xl">
+                Our<br />
+                <em className="not-italic text-primary">Designs</em>
+              </h2>
+              <p className="mt-5 max-w-sm text-sm leading-relaxed text-secondary-foreground/70">
                 Save materials, flag project briefs and follow elevation studies
-                as they develop. Every tile comes out of a real project — a
-                joinery detail, a stone sample, the way afternoon light lands on
-                a wall. Tap one to open it, or send an enquiry from the form to
-                start your own brief.
-              </p>
-
-              <p className="fs-lead text-secondary-foreground/70">
-                Anything you save stays on this device, so the board can grow
-                across several visits rather than one sitting. Material, light
-                and proportion read differently side by side than they do alone
-                — that comparison is the whole point of keeping one.
+                as they develop. Tap a tile to open it, or send an enquiry from
+                the form to start your own brief.
               </p>
             </div>
-
-            <button
-              type="button"
-              onClick={onOpenForm}
-              className="group mt-1 flex items-center gap-2 border-b border-secondary-foreground/40 pb-1 font-mono fs-meta uppercase tracking-[0.1em] text-secondary-foreground transition-colors hover:border-primary hover:text-primary"
-            >
-              Start a brief
-              <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" />
-            </button>
+            <div className="flex items-end justify-end">
+              <button
+                type="button"
+                onClick={onOpenForm}
+                className="group flex items-center gap-2 border-b border-secondary-foreground/40 pb-1 font-mono text-[10px] uppercase tracking-[0.18em] text-secondary-foreground transition-colors hover:border-primary hover:text-primary"
+              >
+                Start a brief
+                <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" />
+              </button>
+            </div>
           </div>
         </Reveal>
 
@@ -193,11 +164,9 @@ export function MoodBoard({ onOpenForm }: MoodBoardProps) {
                 as="article"
                 className={`group relative overflow-hidden border border-secondary-foreground/15 ${item.span}`}
               >
-                <Image
+                <img
                   src={item.img}
                   alt={item.title}
-                  fill
-                  sizes="(max-width: 768px) 50vw, 25vw"
                   className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] group-hover:scale-[1.05]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-secondary/95 via-secondary/30 to-transparent opacity-90 transition-opacity duration-500 group-hover:opacity-100" />
@@ -222,11 +191,11 @@ export function MoodBoard({ onOpenForm }: MoodBoardProps) {
                   className="absolute inset-0 z-0 cursor-pointer"
                   aria-label={`Open ${item.title}`}
                 />
-                <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-4 text-left">
-                  <p className="font-mono fs-micro uppercase tracking-[0.1em] text-primary">
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-left">
+                  <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-primary">
                     {item.meta}
                   </p>
-                  <h3 className="mt-1 font-display text-xl uppercase leading-none md:text-2xl">
+                  <h3 className="mt-1 font-display text-lg uppercase leading-none md:text-2xl">
                     {item.title}
                   </h3>
                   <div className="mt-3 flex gap-1.5">
@@ -249,14 +218,14 @@ export function MoodBoard({ onOpenForm }: MoodBoardProps) {
           <div id="saved" className="mt-16 scroll-mt-32">
             <div className="flex items-end justify-between">
               <div>
-                <span className="font-mono fs-meta uppercase tracking-[0.1em] text-primary">
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary">
                   Material library
                 </span>
-                <h3 className="mt-3 display-3">
+                <h3 className="mt-3 font-display text-3xl uppercase leading-none md:text-5xl">
                   Curated this season
                 </h3>
               </div>
-              <span className="hidden font-mono fs-meta uppercase tracking-[0.1em] text-secondary-foreground/50 md:inline">
+              <span className="hidden font-mono text-[10px] uppercase tracking-[0.18em] text-secondary-foreground/50 md:inline">
                 Tap to favourite
               </span>
             </div>
@@ -268,13 +237,13 @@ export function MoodBoard({ onOpenForm }: MoodBoardProps) {
                     key={m.name}
                     type="button"
                     onClick={() => toggleFav(m.name)}
-                    className={`group flex items-center gap-2 rounded-full border px-4 py-2 font-mono fs-meta uppercase tracking-[0.1em] transition-all duration-300 ${
+                    className={`group flex items-center gap-2 rounded-full border px-4 py-2 font-mono text-[10px] uppercase tracking-[0.16em] transition-all duration-300 ${
                       fav
                         ? 'border-primary bg-primary text-primary-foreground'
                         : 'border-secondary-foreground/20 text-secondary-foreground/80 hover:border-primary hover:text-primary'
                     }`}
                   >
-                    <span className={`rounded-full px-2 py-0.5 fs-micro ${
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] ${
                       fav
                         ? 'bg-primary-foreground/15 text-primary-foreground'
                         : 'bg-secondary-foreground/10 text-secondary-foreground/60'
@@ -291,18 +260,18 @@ export function MoodBoard({ onOpenForm }: MoodBoardProps) {
             {/* Save summary */}
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               <div className="border border-secondary-foreground/15 p-5">
-                <p className="font-display text-5xl uppercase leading-none">
+                <p className="font-display text-4xl uppercase leading-none">
                   {ready ? saved.projects.length : 0}
                 </p>
-                <p className="mt-2 font-mono fs-meta uppercase tracking-[0.1em] text-secondary-foreground/60">
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-secondary-foreground/60">
                   Saved projects
                 </p>
               </div>
               <div className="border border-secondary-foreground/15 p-5">
-                <p className="font-display text-5xl uppercase leading-none">
+                <p className="font-display text-4xl uppercase leading-none">
                   {ready ? saved.materials.length : 0}
                 </p>
-                <p className="mt-2 font-mono fs-meta uppercase tracking-[0.1em] text-secondary-foreground/60">
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-secondary-foreground/60">
                   Favourite materials
                 </p>
               </div>
@@ -319,9 +288,6 @@ export function MoodBoard({ onOpenForm }: MoodBoardProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 grid place-items-center bg-secondary/85 p-4 backdrop-blur-sm"
-            role="dialog"
-            aria-modal="true"
-            aria-label={active.title}
             onClick={() => setActive(null)}
           >
             <motion.div
@@ -340,26 +306,23 @@ export function MoodBoard({ onOpenForm }: MoodBoardProps) {
               >
                 <X className="h-4 w-4" />
               </button>
-              <Image
+              <img
                 src={active.img}
                 alt={active.title}
-                width={1024}
-                height={1024}
-                sizes="(max-width: 768px) 100vw, 50vw"
                 className="aspect-square w-full object-cover md:h-full"
               />
               <div className="p-8 md:p-10">
-                <p className="font-mono fs-meta uppercase tracking-[0.1em] text-primary">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary">
                   {active.meta}
                 </p>
-                <h3 className="mt-3 display-3">
+                <h3 className="mt-3 font-display text-3xl uppercase leading-none md:text-4xl">
                   {active.title}
                 </h3>
-                <p className="mt-4 fs-body leading-relaxed text-muted-foreground">
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                   {active.desc}
                 </p>
                 <div className="mt-6">
-                  <p className="font-mono fs-meta uppercase tracking-[0.1em] text-muted-foreground">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                     Palette
                   </p>
                   <div className="mt-3 flex flex-wrap gap-3">
@@ -369,7 +332,7 @@ export function MoodBoard({ onOpenForm }: MoodBoardProps) {
                           className="h-5 w-5 rounded-full ring-1 ring-border"
                           style={{ background: c }}
                         />
-                        <span className="font-mono fs-meta uppercase tracking-[0.1em] text-foreground/70">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-foreground/70">
                           {c}
                         </span>
                       </div>
@@ -384,16 +347,8 @@ export function MoodBoard({ onOpenForm }: MoodBoardProps) {
                     }}
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    <Heart
-                      className={`mr-1 h-4 w-4 ${
-                        ready && saved.projects.includes(active.slug)
-                          ? 'fill-current'
-                          : ''
-                      }`}
-                    />
-                    {ready && saved.projects.includes(active.slug)
-                      ? 'Remove from mood board'
-                      : 'Save to mood board'}
+                    <Heart className="mr-1 h-4 w-4" />
+                    Save to mood board
                   </Button>
                   <Button
                     type="button"
